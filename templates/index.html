@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信文章转 Markdown</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+            color: #343a40;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        input[type="url"] {
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="url"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .output-area {
+            margin-top: 40px;
+            border-top: 1px solid #e9ecef;
+            padding-top: 30px;
+        }
+        h2 {
+            color: #007bff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 450px;
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background-color: #fefefe;
+            resize: vertical;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        .button-group button {
+            flex-grow: 1; /* Make buttons take equal width */
+        }
+        .error-message {
+            color: #dc3545;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .info-message {
+            color: #6c757d;
+            margin-top: 25px;
+            font-size: 0.9em;
+            text-align: center;
+            padding: 10px;
+            background-color: #e2e3e5;
+            border-radius: 5px;
+        }
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px 10px;
+                padding: 20px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>微信文章转 Markdown</h1>
+        <form method="POST">
+            <label for="wechat_url">请输入微信公众号文章 URL:</label>
+            <input type="url" id="wechat_url" name="wechat_url" placeholder="例如: https://mp.weixin.qq.com/s/xxxxxxxxx" required value="{{ original_url }}">
+            <button type="submit">提取 Markdown</button>
+        </form>
+
+        {% if error_message %}
+            <div class="error-message">{{ error_message }}</div>
+        {% endif %}
+
+        {% if markdown_output %}
+            <div class="output-area">
+                <h2>提取结果</h2>
+                <textarea id="markdownOutput" readonly>{{ markdown_output }}</textarea>
+                <div class="button-group">
+                    <button onclick="copyToClipboard()">复制到剪贴板</button>
+                    <form action="/download" method="POST" style="display:inline-block; flex-grow: 1;">
+                        <input type="hidden" name="markdown_content" value="{{ markdown_output | e }}">
+                        <input type="hidden" name="article_title" value="{{ markdown_output.split('\n')[0].replace('#', '').strip() if markdown_output.startswith('#') else '微信文章' }}">
+                        <button type="submit">下载 Markdown</button>
+                    </form>
+                </div>
+            </div>
+            <div class="info-message">
+                注意：微信公众号有反爬机制，过于频繁的请求可能失败。图片链接可能因防盗链而失效。
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const textarea = document.getElementById('markdownOutput');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999); // For mobile devices
+            try {
+                document.execCommand('copy');
+                alert('Markdown 内容已复制到剪贴板！');
+            } catch (err) {
+                console.error('无法复制到剪贴板', err);
+                alert('复制失败，请手动复制。');
+            }
+        }
+    </script>
+</body>
+</html>
