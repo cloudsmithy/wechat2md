@@ -1,12 +1,10 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# 只拷依赖声明以利用缓存
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-dev --system || uv sync --no-dev --system
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 再拷源码
 COPY . .
 
 CMD ["python", "app.py"]
